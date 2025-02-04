@@ -1,0 +1,12 @@
+#container {
+    width: 960px;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.square {
+    width: calc(960px /16);
+    height: calc(960px /16);
+    box-sizing: border-box;
+    border: 1px solid black;
+}
