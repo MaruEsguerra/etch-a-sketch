@@ -13,10 +13,6 @@ function createSquare(size) {
     let square = document.createElement("div");
     square.classList.add("square");
 
-    square.addEventListener("mouseenter", ()=>{
-        square.style.backgroundColor = "black";
-    });
-
     // Dynamically computes square size
     const squareSize = 960 / size;
 
@@ -24,7 +20,30 @@ function createSquare(size) {
     square.style.width = `${squareSize}px`;
     square.style.height = `${squareSize}px`;
 
+    solidColor(square);
+
     return square;
+}
+
+// Default hover/drawing effect
+function solidColor(square) {
+    // Tracks if mouse button is held down
+    let isDrawing = false;
+
+    // EventListeners to aid in tracking mouse button state
+    document.addEventListener("mousedown", ()=>{
+        isDrawing = true;
+    });
+
+    document.addEventListener("mouseup", ()=>{
+        isDrawing = false;
+    });
+
+    square.addEventListener("mouseover", ()=>{
+        if (isDrawing) {
+            square.style.backgroundColor = "black";
+        }
+    });
 }
 
 // Handles making grid as per user specifications
@@ -43,7 +62,7 @@ const resizeBtn = document.querySelector("#resize");
 resizeBtn.addEventListener("click", resizeGrid);
 
 // Optional stuff to add:
-    // Color
+    // Color picker
     // Opacity
     // Saving
     // Eraser
