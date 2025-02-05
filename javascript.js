@@ -21,7 +21,7 @@ function createSquare(size) {
     square.classList.add("square");
 
     // Dynamically computes square size
-    const squareSize = 960 / size;
+    const squareSize = 664 / size;
 
     // Sets the square size
     square.style.width = `${squareSize}px`;
