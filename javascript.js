@@ -102,8 +102,7 @@ function rainbowColor(square) {
 // Progressive shading mode
 function progressiveShading(square) {
     let isDrawing = false;
-    square.style.backgroundColor = drawingState.color;
-    square.style.opacity = "0";
+    square.dataset.shade = "0";
 
     document.addEventListener("mousedown", ()=>{
         isDrawing = true;
@@ -114,9 +113,11 @@ function progressiveShading(square) {
     });
 
     function darken(element) {
-        let currentOpacity = parseFloat(window.getComputedStyle(element).opacity);
-        if (currentOpacity < 1) {
-            element.style.opacity = (currentOpacity + 0.1).toFixed(1);
+        let shade = parseInt(element.dataset.shade);
+        if (shade < 10) {
+            shade++;
+            element.dataset.shade = shade;
+            element.style.backgroundColor = `rgba(0, 0, 0, ${shade * 0.1})`;
         }
     }
 
@@ -132,19 +133,99 @@ function progressiveShading(square) {
 
 }
 
-// Handles making grid as per user specifications
-function resizeGrid() {
-    let size = prompt("Please input the new grid size.", 16);
-    if (size <= 100) {
-        const grid = document.querySelector("#container");
-        grid.innerHTML = "";
-        createGrid(size);
-    } else if (size > 100) {
-        alert("Please input a number no more than 100.");
-    }
+// Ensures UI is working
+function initializeControls() {
+    // Sets up buttons
+    document.querySelectorAll(".mode-btn").forEach(button => {
+        button.addEventListener("click", (e) => {
+            document.querySelectorAll(".mode-btn").forEach(btn =>
+                btn.classList.remove("active")
+            );
+
+            e.target.classList.add("active");
+
+            drawingState.mode = e.target.id.replace("-mode", "");
+
+            const grid = document.querySelector("#container");
+            const size = Math.sqrt(grid.children.length);
+            grid.innerHTML = "";
+            createGrid(size);
+        });
+    });
+
+    // Sets up the color picker
+    const colorPicker = document.querySelector("#color-picker");
+    colorPicker.addEventListener("input", (e) => {
+        // Changes color when user does
+        drawingState.color = e.target.value;
+    });
+
+    // Sets up eraser
+    document.querySelector("#eraser").addEventListener("click", ()=>{
+        drawingState.color = "#FFFFFF";
+    });
+
+    // Allows usage of grid size slider
+    const slider = document.querySelector("#grid-size");
+    const sizeDisplay = document.querySelector("#size-value");
+
+    slider.addEventListener("input", (e) => {
+        const size = e.target.value;
+        sizeDisplay.textContent = `${size} x ${size}`;
+        createGrid(size)
+    });
+
+    // Allows grid clearing
+    document.querySelector("#clear-grid").addEventListener("click", ()=>{
+        const squares = document.querySelectorAll(".square");
+        squares.forEach(square => {
+            square.style.backgroundColor = "";
+            if (square.dataset.shade) {
+                square.dataset.shade = "0";
+            }
+        });
+    });
+
+    // Allows save to work
+    document.querySelector("#save-drawing").addEventListener("click", saveDrawing);
 }
 
-const resizeBtn = document.querySelector("#resize");
-resizeBtn.addEventListener("click", resizeGrid);
+// Function to actually save drawing
+function saveDrawing() {
+    const grid = document.querySelector("#container");
 
-createGrid(16)
+    // Initializes a clone using canvas element
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    // Makes sure the size is correct
+    canvas.width = grid.offsetWidth;
+    canvas.height = grid.offsetHeight;
+
+    // Fills background squares without color
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Starts the clone
+    const squares = document.querySelectorAll(".square");
+    squares.forEach(square => {
+        const rect = square.getBoundingClientRect();
+        const color = square.style.backgroundColor || "white";
+        ctx.fillStyle = color;
+        ctx.fillRect(
+            rect.left - grid.getBoundingClientRect().left,
+            rect.top - grid.getBoundingClientRect().top,
+            rect.width,
+            rect.height
+        );
+    });
+
+    // Creates download link
+    const link = document.createElement("a");
+    link.download = "etch-a-sketch.png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+}
+
+createGrid(16);
+initializeControls();
