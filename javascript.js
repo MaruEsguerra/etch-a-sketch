@@ -20,9 +20,19 @@ function createSquare(size) {
     square.style.width = `${squareSize}px`;
     square.style.height = `${squareSize}px`;
 
-    solidColor(square);
-
     return square;
+}
+
+// Handles drawing mode
+function drawingMode() {
+    // Chooses drawing mode
+    const solid = document.querySelector("#solid");
+    const rgb = document.querySelector("rgb");
+    const sketching = document.querySelector("#sketching");
+    const eraser = document.querySelector("#eraser");
+    solid.addEventListener("click", ()=>{
+        solidColor(square);
+    });
 }
 
 // Default hover/drawing effect

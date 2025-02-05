@@ -7,7 +7,26 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <button id="resize">New Grid</button>
+    <div class="controls">
+        <button id="resize">New Grid</button>
+
+        <div class="drawing-modes">
+            <button id="solid-mode" class="mode-btn active">Color Mode</button>
+            <button id="rgb-mode" class="mode-btn">Rainbow Mode</button>
+            <button id="shade-mode" class="mode-btn">Shading Mode</button>
+        </div>
+
+        <div class="color-tools">
+            <input type="color" id="color-picker" value="#000000">
+            <button id="eraser" class="tool-btn">Eraser</button>
+        </div>
+
+        <div class="canvas-actions">
+            <button id="clear-grid">Clear</button>
+            <button id="save-drawing">Save</button>
+        </div>
+    </div>
+
     <div id="container"></div>
     <script src="javascript.js"></script>
 </body>
