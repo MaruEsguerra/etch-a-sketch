@@ -7,9 +7,9 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="controls">
-        <button id="resize">New Grid</button>
+    <h1>Etch-A-Sketch!</h1>
 
+    <div class="controls">
         <div class="drawing-modes">
             <button id="solid-mode" class="mode-btn active">Color Mode</button>
             <button id="rgb-mode" class="mode-btn">Rainbow Mode</button>
@@ -28,6 +28,12 @@
     </div>
 
     <div id="container"></div>
+
+<div class="grid-size-control">
+    <label for="grid-size">Grid Size: <span id="size-value">16 x 16</span></label>
+    <input type="range" id="grid-size" min="1" max="100" value="16" class="slider">
+</div>
+
     <script src="javascript.js"></script>
 </body>
 </html>
