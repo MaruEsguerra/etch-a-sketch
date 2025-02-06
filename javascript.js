@@ -167,7 +167,7 @@ function initializeControls() {
         });
     });
 
-    document.querySelector("save-drawing").addEventListener("click", saveDrawing);
+    document.querySelector("#save-drawing").addEventListener("click", saveDrawing);
 }
 
 // Function to actually save drawing
