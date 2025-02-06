@@ -1,193 +1,173 @@
 // Tracks current drawing settings
 const drawingState = {
     mode: "solid",
-    color: "#000000"
+    color: "#000000",
+    isDrawing: false
 }
 
-// Creates the grid
+// Creates the grid and squares
 function createGrid(size) {
     const gridContainer = document.querySelector("#container");
     gridContainer.innerHTML = "";
+
+    // Smoothens experience changing the grid w/ batch DOM updates
+    const fragment = document.createDocumentFragment();
+
+    // Calculates square size
+    const squareSize = 664/size;
+
     for (let i = 0; i < size * size; i++) {
-        squareGrid = createSquare(size)
-        gridContainer.appendChild(squareGrid);
+        const square = document.createElement("div");
+        square.classList.add("square");
+        square.style.width = `${squareSize}px`;
+        square.style.height = `${squareSize}px`;
+        fragment.appendChild(square);
     }
+
+    // Adds all the squares at once
+    gridContainer.appendChild(fragment);
+
+    // Allows usage of event listeners to entire grid instead of each individual square
+    setupDrawingEvents(gridContainer);
 }
 
-// Creates the squares with hovering functionality
-function createSquare(size) {
-    // Allows css flexbox to fix the grid
-    let square = document.createElement("div");
-    square.classList.add("square");
+// Drawing event delegation for entire document
+function setupDrawingEvents(container) {
+    document.addEventListener("mousedown", () => {
+        drawingState.isDrawing = true;
+    });
 
-    // Dynamically computes square size
-    const squareSize = 664 / size;
+    document.addEventListener("mouseup", () => {
+        drawingState.isDrawing = false;
+    });
 
-    // Sets the square size
-    square.style.width = `${squareSize}px`;
-    square.style.height = `${squareSize}px`;
+    // Safety nets for hovering mouse bug
+    document.addEventListener("mouseleave", () => {
+        drawingState.isDrawing = false;
+    });
 
-    // Check chosen state and apply
+    document.addEventListener("mouseenter", () => {
+        drawingState.isDrawing = false;
+    });
+
+    container.addEventListener("mouseover", (e) => {
+        // Checks if user stopped drawing and returns
+        if (!drawingState.isDrawing || !e.target.classList.contains("square")) return;
+        applyColor(e.target);
+    });
+
+    container.addEventListener("mousedown", (e) => {
+        if (!e.target.classList.contains("square")) return;
+        applyColor(e.target);
+    });
+}
+
+// Handles the different drawing modes
+function applyColor(square) {
     switch (drawingState.mode) {
         case "rainbow":
-            rainbowColor(square);
+            square.style.backgroundColor = getRandomColor();
             break;
         case "shade":
-            progressiveShading(square);
+            applyShading(square);
             break;
         default:
-            solidColor(square);
-    }
-
-    return square;
-}
-
-// Default hover/drawing effect
-function solidColor(square) {
-    // Tracks if mouse button is held down
-    let isDrawing = false;
-
-    // EventListeners to aid in tracking mouse button state
-    document.addEventListener("mousedown", ()=>{
-        isDrawing = true;
-    });
-
-    document.addEventListener("mouseup", ()=>{
-        isDrawing = false;
-    });
-
-    // Colors using chosen color
-    square.addEventListener("mouseover", ()=>{
-        if (isDrawing) {
             square.style.backgroundColor = drawingState.color;
-        }
-    });
-
-    // Ensures color even without mouse being dragged
-    square.addEventListener("mousedown", ()=>{
-        square.style.backgroundColor = drawingState.color;
-    });
-}
-
-// Rainbow color mode
-function rainbowColor(square) {
-    let isDrawing = false;
-
-    document.addEventListener("mousedown", ()=>{
-        isDrawing = true;
-    });
-
-    document.addEventListener("mouseup", ()=>{
-        isDrawing = false;
-    });
-
-    function getRandomColor() {
-        const r = Math.floor(Math.random() * 256);
-        const g = Math.floor(Math.random() * 256);
-        const b = Math.floor(Math.random() * 256);
-        return `rgb(${r}, ${g}, ${b})`;
     }
-
-    square.addEventListener("mouseover", ()=>{
-        if (isDrawing) {
-            square.style.backgroundColor = getRandomColor();
-        }
-    });
-
-    square.addEventListener("mousedown", ()=>{
-        square.style.backgroundColor = getRandomColor();
-    });
 }
 
-// Progressive shading mode
-function progressiveShading(square) {
-    let isDrawing = false;
-    square.dataset.shade = "0";
+// Vibrant random color generation
+function getRandomColor() {
+    // Uses HSL
+    const hue = Math.floor(Math.random() * 360);
+    const saturation = 70 + Math.random() * 30;
+    const lightness = 45 + Math.random() * 10;
+    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+}
 
-    document.addEventListener("mousedown", ()=>{
-        isDrawing = true;
-    });
+// Progressive darkening that accounts for chosen color
+function applyShading(square) {
+    // Initializes shade level
+    let shade = parseInt(square.dataset.shade || "0");
+    if (shade >= 10) return;
 
-    document.addEventListener("mouseup", ()=>{
-        isDrawing = false;
-    });
+    shade++;
+    square.dataset.shade = shade;
 
-    function darken(element) {
-        let shade = parseInt(element.dataset.shade);
-        if (shade < 10) {
-            shade++;
-            element.dataset.shade = shade;
-            element.style.backgroundColor = `rgba(0, 0, 0, ${shade * 0.1})`;
+    // Converts color to RGBA for shading
+    if (shade === 1) {
+        // Parses the color into rgb
+        let color = drawingState.color;
+        if (color.startsWith("#")) {
+            const r = parseInt(color.slice(1, 3), 16);
+            const g = parseInt(color.slice(3, 5), 16);
+            const b = parseInt(color.slice(5, 7), 16);
+            square.dataset.baseColor = `${r},${g},${b}`;
+        } else {
+            square.dataset.baseColor = "0,0,0";
         }
     }
 
-    square.addEventListener("mouseover", ()=>{
-        if (isDrawing) {
-            darken(square);
-        }
-    });
-
-    square.addEventListener("mousedown", ()=>{
-        darken(square);
-    });
-
+    const baseColor = square.dataset.baseColor;
+    square.style.backgroundColor = `rgba(${baseColor}, ${shade * 0.1})`;
 }
 
-// Ensures UI is working
+// Initializes the UI
 function initializeControls() {
-    // Sets up buttons
+    // Sets up color mode buttons
     document.querySelectorAll(".mode-btn").forEach(button => {
         button.addEventListener("click", (e) => {
             document.querySelectorAll(".mode-btn").forEach(btn =>
                 btn.classList.remove("active")
             );
-
-            e.target.classList.add("active");
-
             drawingState.mode = e.target.id.replace("-mode", "");
-
-            const grid = document.querySelector("#container");
-            const size = Math.sqrt(grid.children.length);
-            grid.innerHTML = "";
-            createGrid(size);
         });
     });
 
-    // Sets up the color picker
+    // Sets up color picker
     const colorPicker = document.querySelector("#color-picker");
     colorPicker.addEventListener("input", (e) => {
-        // Changes color when user does
         drawingState.color = e.target.value;
     });
 
-    // Sets up eraser
-    document.querySelector("#eraser").addEventListener("click", ()=>{
+    // Sets up universal eraser
+    document.querySelector("#eraser").addEventListener("click", () => {
+        const previousMode = drawingState.mode;
+        drawingState.mode = "solid";
         drawingState.color = "#FFFFFF";
+
+        // Ensures user knows eraser is being used
+        document.querySelector("#eraser").classList.add("active");
     });
 
-    // Allows usage of grid size slider
+    // Allows and optimizes slider performance
     const slider = document.querySelector("#grid-size");
     const sizeDisplay = document.querySelector("#size-value");
+    let debounceTimeout;
 
     slider.addEventListener("input", (e) => {
+        // Updates grid size label
         const size = e.target.value;
         sizeDisplay.textContent = `${size} x ${size}`;
-        createGrid(size)
+
+        // Updates actual grid
+        clearTimeout(debounceTimeout);
+        debounceTimeout = setTimeout(() => {
+            createGrid(size);
+        }, 150);
     });
 
-    // Allows grid clearing
-    document.querySelector("#clear-grid").addEventListener("click", ()=>{
+    // Sets up clear and save buttons
+    document.querySelector("#clear-grid").addEventListener("click", () => {
         const squares = document.querySelectorAll(".square");
         squares.forEach(square => {
             square.style.backgroundColor = "";
-            if (square.dataset.shade) {
-                square.dataset.shade = "0";
-            }
+            delete square.dataset.shade;
+            delete square.dataset.baseColor;
         });
     });
 
-    // Allows save to work
-    document.querySelector("#save-drawing").addEventListener("click", saveDrawing);
+    document.querySelector("save-drawing").addEventListener("click", saveDrawing);
 }
 
 // Function to actually save drawing
